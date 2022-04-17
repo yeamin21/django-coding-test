@@ -6,13 +6,12 @@ from .models import Product, ProductVariant, ProductVariantPrice, Variant
 
 
 class ProductVariantSerializer(serializers.ModelSerializer):
-    variant_title = serializers.CharField(allow_blank=True,required=False)
-    variant = serializers.PrimaryKeyRelatedField(queryset=Variant.objects.all(), required=False)
+    variant_title = serializers.CharField(allow_blank=True,required=False,allow_null=True)
+    variant = serializers.PrimaryKeyRelatedField(queryset=Variant.objects.all(), required=False,allow_null=True,)
     class Meta:
         model = ProductVariant
         fields=['variant_title','variant']
-       
-
+      
 class VariantSerializer(serializers.ModelSerializer):
     # productvariant_set = ProductVariantSerializer(many=True)
     class Meta:
@@ -25,9 +24,9 @@ class VariantSerializer(serializers.ModelSerializer):
         return data
 class ProductVariantPriceSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
-    product_variant_one = ProductVariantSerializer(required=False)    
-    product_variant_two = ProductVariantSerializer(required=False)
-    product_variant_three = ProductVariantSerializer(required=False)
+    product_variant_one = ProductVariantSerializer(required=False,allow_null=True)    
+    product_variant_two = ProductVariantSerializer(required=False,allow_null=True)
+    product_variant_three = ProductVariantSerializer(required=False,allow_null=True)
     class Meta:
         model = ProductVariantPrice
         exclude = ['created_at','updated_at','product']
