@@ -1,5 +1,8 @@
 {% extends 'backend/base.html' %} {% block title %} Product List {% endblock %}
 {% block content %}
-<div id="app"><list-product></list-product></div>
+<div id="app">
+  <edit-product :product_id="{{product.id}}" :variants="{{variants|safe}}">
+  </edit-product>
+</div>
 
 {% endblock %}

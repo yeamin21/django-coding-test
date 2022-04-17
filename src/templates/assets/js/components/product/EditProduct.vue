@@ -45,8 +45,6 @@
             <vue-dropzone
               ref="myVueDropzone"
               id="dropzone"
-              v-model="images"
-              @vdropzone-file-added="fileAdded"
               :options="dropzoneOptions"
             ></vue-dropzone>
           </div>
@@ -60,12 +58,12 @@
           >
             <h6 class="m-0 font-weight-bold text-primary">Variants</h6>
           </div>
-          <div class="card-body">
+          <!-- <div class="card-body">
             <div class="row" v-for="(item, index) in product_variant">
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="">Option</label>
-                  <select v-model="item.option" class="form-control">
+                  <select v-model="item.variant" class="form-control">
                     <option v-for="variant in variants" :value="variant.id">
                       {{ variant.title }}
                     </option>
@@ -86,7 +84,7 @@
                   >
                   <label v-else for="">.</label>
                   <input-tag
-                    v-model="item.tags"
+                    v-model="item.variant_title"
                     @input="checkVariant"
                     class="form-control"
                   ></input-tag>
@@ -104,7 +102,7 @@
             <button @click="newVariant" class="btn btn-primary">
               Add another option
             </button>
-          </div>
+          </div> -->
 
           <div class="card-header text-uppercase">Preview</div>
           <div class="card-body">
@@ -119,7 +117,18 @@
                 </thead>
                 <tbody>
                   <tr v-for="variant_price in product_variant_prices">
-                    <td>{{ variant_price.title }}</td>
+                    <td>
+                      <span v-if="variant_price.product_variant_one"
+                        >{{ variant_price.product_variant_one.variant_title }}
+                      </span>
+                      <span v-if="variant_price.product_variant_two"
+                        >/ {{ variant_price.product_variant_two.variant_title }}
+                      </span>
+                      <span v-if="variant_price.product_variant_three"
+                        >/
+                        {{ variant_price.product_variant_three.variant_title }}
+                      </span>
+                    </td>
                     <td>
                       <input
                         type="text"
@@ -143,7 +152,7 @@
       </div>
     </div>
 
-    <button @click="saveProduct" type="submit" class="btn btn-lg btn-primary">
+    <button @click="updateProduct" type="submit" class="btn btn-lg btn-primary">
       Save
     </button>
     <button type="button" class="btn btn-secondary btn-lg">Cancel</button>
@@ -162,6 +171,10 @@ export default {
     InputTag,
   },
   props: {
+    product_id: {
+      type: Number,
+    },
+
     variants: {
       type: Array,
       required: true,
@@ -172,11 +185,12 @@ export default {
       product_name: "",
       product_sku: "",
       description: "",
+
       images: [],
       product_variant: [
         {
-          option: this.variants[0].id,
-          tags: [],
+          // option: this.variants[0].id,
+          // tags: [],
         },
       ],
       product_variant_prices: [],
@@ -188,11 +202,24 @@ export default {
       },
     };
   },
+  created() {
+    this.getProduct();
+  },
   methods: {
+    getProduct() {
+      axios.get(`/api/products/${this.product_id}`).then((res) => {
+        this.product_name = res.data.title;
+        this.product_sku = res.data.sku;
+        this.description = res.data.description;
+        this.product_variant = res.data.productvariant_set;
+        this.product_variant_prices = res.data.productvariantprice_set;
+      });
+    },
+
     // it will push a new object into product variant
     newVariant() {
       let all_variants = this.variants.map((el) => el.id);
-      let selected_variants = this.product_variant.map((el) => el.option);
+      let selected_variants = this.product_variant.map((el) => el.variant);
       let available_variants = all_variants.filter(
         (entry1) => !selected_variants.some((entry2) => entry1 == entry2)
       );
@@ -209,7 +236,7 @@ export default {
       let tags = [];
       this.product_variant_prices = [];
       this.product_variant.filter((item) => {
-        tags.push(item.tags);
+        tags.push(item.variant_title);
       });
 
       this.getCombn(tags).forEach((item) => {
@@ -228,26 +255,26 @@ export default {
         return pre;
       }
       let self = this;
-      let ans = arr[0].reduce(function (ans, value) {
+      let ans = arr.reduce(function (ans, value) {
         return ans.concat(self.getCombn(arr.slice(1), pre + value + "/"));
       }, []);
       return ans;
     },
 
     // store product into database
-    saveProduct() {
+    updateProduct() {
       let product = {
         title: this.product_name,
         sku: this.product_sku,
         description: this.description,
         product_image: this.images,
-        product_variant: this.product_variant,
-        product_variant_prices: this.product_variant_prices,
+        productvariant_set: this.product_variant,
+        productvariantprice_set: this.product_variant_prices,
       };
       axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
       axios.defaults.xsrfCookieName = "csrftoken";
       axios
-        .post("/api/products/", product)
+        .put("/api/products/" + this.product_id + "/", product)
         .then((response) => {
           console.log(response.data);
         })
@@ -256,14 +283,6 @@ export default {
         });
 
       console.log(product);
-    },
-    fileAdded(file) {
-      var reader = new FileReader();
-      reader.onload = function (file) {
-        const reader = new FileReader();
-        x = reader.readAsDataURL(file);
-        console.log(x);
-      };
     },
   },
   mounted() {

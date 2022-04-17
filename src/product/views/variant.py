@@ -1,9 +1,15 @@
 from django.views import generic
-from django.views.generic import ListView, CreateView, UpdateView
+from django.views.generic import CreateView, ListView, UpdateView
+from rest_framework import viewsets
 
 from product.forms import VariantForm
 from product.models import Variant
+from product.serializers import VariantSerializer
 
+
+class VariantViewset(viewsets.ModelViewSet):
+    serializer_class = VariantSerializer
+    queryset = Variant.objects.all()
 
 class BaseVariantView(generic.View):
     form_class = VariantForm

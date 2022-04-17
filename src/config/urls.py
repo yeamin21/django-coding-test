@@ -15,16 +15,23 @@ Including another URLconf
 """
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from django.views.decorators.cache import never_cache
 from django.views.static import serve
+from product.views.product import ProductViewSet
+from product.views.variant import VariantViewset
+from rest_framework import routers
 
 from config import settings
 
+router = routers.DefaultRouter()
+router.register('products', ProductViewSet)
+router.register('variants',VariantViewset)
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('authentication.urls')),
-    path('product/', include('product.urls'))
+    path('product/', include('product.urls')),
+    path('api/', include(router.urls)),
 ]
 
 if settings.DEBUG:
